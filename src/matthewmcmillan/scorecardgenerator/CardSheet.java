@@ -4,38 +4,58 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
-/**
- * Created by mmcmillan on 6/13/16.
- */
 public class CardSheet {
     public CardSheet(ScoreCard[] cards, int sheet_number) {
         this.cards = cards;
         this.sheet_number = sheet_number;
     }
-    private int sheet_number;
+    private final int sheet_number;
     private ScoreCard[] cards = new ScoreCard[4];
     public void generateSheet() {
         try {
-            ArrayList<String> new_lines = new ArrayList<>();
+            InsertableXMLFile new_lines = new InsertableXMLFile();
             BufferedReader br = new BufferedReader(new FileReader("content_backup.xml"));
             String line;
             while ((line = br.readLine()) != null) {
-                for (int i = 0; i < 4; i++) {
-                    line = line.replaceAll("COMPETITOR_NAME" + (i + 1), cards[i].getName());
-                    line = line.replaceAll("WCAID" + (i + 1), cards[i].getWCAID());
-                    line = line.replaceAll("EVENT_NAME" + (i + 1), cards[i].getEvent());
-                    line = line.replaceAll("ROUND_NAME" + (i + 1), cards[i].getRound());
-                    line = line.replaceAll("HEAT_NAME" + (i + 1), cards[i].getHeat());
-                    line = line.replaceAll("COMPETITION_NAME", Main.competition_name);
-                }
                 new_lines.add(line);
             }
-            OutputMethods.writeToSkeleton(new_lines);
+            for (int i = 0; i < 4; i++) {
+                new_lines.insertNumbered(
+                        new String[][]{
+                                {"name", cards[i].getName()},
+                                {"wcaid", cards[i].getWCAID()},
+                                {"event", cards[i].getEvent().getName()},
+                                {"round", cards[i].getRound()},
+                                {"heat", cards[i].getHeat()},
+                                {"hard_cutoff", cards[i].getEvent().getHardCutoff()}
+                        }, i
+                        );
+                new_lines.insert("comp_name", Main.competition_name);
+                if (cards[i].getEvent().getAttemptType().equals("mean")) {
+                    new_lines.insertNumbered(
+                        new String[][] {
+                                {"solve4", ""},
+                                {"solve5", ""},
+                                {"average_soft_cutoff", ""},
+                                {"mean_soft_cutoff", cards[i].getEvent().getSoftCutoff()}
+                        }, i);
+                } else if (cards[i].getEvent().getAttemptType().equals("average")) {
+                    new_lines.insertNumbered(
+                            new String[][] {
+                                    {"solve4", "Solve 4"},
+                                    {"solve5", "Solve 5"},
+                                    {"average_soft_cutoff", cards[i].getEvent().getSoftCutoff()},
+                                    {"mean_soft_cutoff", ""}
+                            }, i
+                    );
+                }
+            }
+            OutputMethods.writeToSkeleton(new_lines.toStringArray());
             OutputMethods.compressSkeleton();
             OutputMethods.skeletonToPDF();
             OutputMethods.moveToOutput(sheet_number);
         } catch (Exception e) {
-            System.out.println("sheet.generate failed...");
+            System.out.println("sheet.generate failed..." + e + e.getCause());
         }
     }
 }

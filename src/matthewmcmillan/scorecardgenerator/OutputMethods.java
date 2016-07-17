@@ -1,6 +1,7 @@
 package matthewmcmillan.scorecardgenerator;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -47,7 +48,7 @@ public class OutputMethods {
         Zip.zipToOdf("skeleton");
     }
     public static void skeletonToPDF() {
-        execute("unoconv skeleton.odt");
+        OutputMethods.execute("unoconv skeleton.odt");
     }
     public static void moveToOutput(int pdf_number) {
         try {
@@ -67,20 +68,29 @@ public class OutputMethods {
     }
     public static void deleteOutput() {
         try {
-            Files.deleteIfExists(Paths.get("output"));
+            deleteDir(new File("output"));
         } catch (Exception e) {
             System.out.println("error deleting output");
         }
     }
+    public static void deleteDir(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                deleteDir(f);
+            }
+        }
+        file.delete();
+    }
     public static void resetAll() {
         try {
-            Files.deleteIfExists(Paths.get("output"));
+            deleteOutput();
             Files.createDirectory(Paths.get("output"));
             Files.deleteIfExists(Paths.get("heats.txt"));
             Files.deleteIfExists(Paths.get("scorecards.pdf"));
             Files.deleteIfExists(Paths.get("skeleton.odt"));
         } catch (Exception e) {
-            System.out.println("Error in resetAll");
+            System.out.println("Error in resetAll: " + e);
         }
     }
 

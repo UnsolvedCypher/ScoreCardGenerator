@@ -31,12 +31,12 @@ public class Zip {
      */
     private void zipDirectory(File dir, String zipDirName) {
         try {
-            populateFilesList(dir);
+            this.populateFilesList(dir);
             //now zip files one by one
             //create ZipOutputStream to write to the zip file
             FileOutputStream fos = new FileOutputStream(zipDirName);
             ZipOutputStream zos = new ZipOutputStream(fos);
-            for(String filePath : filesListInDir){
+            for(String filePath : this.filesListInDir){
                 //System.out.println("Zipping "+filePath);
                 //for ZipEntry we need to keep only relative file path, so we used substring on absolute path
                 ZipEntry ze = new ZipEntry(filePath.substring(dir.getAbsolutePath().length()+1, filePath.length()));
@@ -66,8 +66,8 @@ public class Zip {
     private void populateFilesList(File dir) throws IOException {
         File[] files = dir.listFiles();
         for(File file : files){
-            if(file.isFile()) filesListInDir.add(file.getAbsolutePath());
-            else populateFilesList(file);
+            if(file.isFile()) this.filesListInDir.add(file.getAbsolutePath());
+            else this.populateFilesList(file);
         }
     }
 

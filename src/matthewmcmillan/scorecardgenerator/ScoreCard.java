@@ -4,15 +4,11 @@ package matthewmcmillan.scorecardgenerator;
  * Created by mmcmillan on 6/13/16.
  */
 public class ScoreCard {
-    public String getEvent() {
-        return this.event;
+    public Event getEvent() {
+        return event;
     }
 
-    public void setEvent(String event) {
-        this.event = event;
-    }
-
-    public ScoreCard(String name, String WCAID, String event, String round) {
+    public ScoreCard(String name, String WCAID, String round, Event event) {
         this.name = name;
         this.WCAID = WCAID;
         this.event = event;
@@ -21,17 +17,17 @@ public class ScoreCard {
     public ScoreCard() {
 
     }
-    public ScoreCard(String event, String round) {
+    public ScoreCard(Event event, String round) {
         this.event = event;
         this.round = round;
     }
     private String round = "";
     private String WCAID = "";
-    private String event = "";
+    private Event event = new Event();
     private String name = "";
 
     public String getHeat() {
-        return this.heat;
+        return heat;
     }
 
     public void setHeat(String heat) {
@@ -41,15 +37,15 @@ public class ScoreCard {
     private String heat = "";
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
 
     public String getRound() {
-        return this.round;
+        return round;
     }
 
     public String getWCAID() {
-        return this.WCAID;
+        return WCAID;
     }
 }
