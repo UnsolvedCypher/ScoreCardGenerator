@@ -2,7 +2,6 @@ package matthewmcmillan.scorecardgenerator;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.ArrayList;
 
 public class CardSheet {
     public CardSheet(ScoreCard[] cards, int sheet_number) {
@@ -27,7 +26,8 @@ public class CardSheet {
                                 {"event", cards[i].getEvent().getName()},
                                 {"round", cards[i].getRound()},
                                 {"heat", cards[i].getHeat()},
-                                {"hard_cutoff", cards[i].getEvent().getHardCutoff()}
+                                {"hard_cutoff", cards[i].getEvent().getHardCutoff()},
+                                {"ccid", EventsManager.getCubeCompsFromName(cards[i].getName())}
                         }, i
                         );
                 new_lines.insert("comp_name", Main.competition_name);

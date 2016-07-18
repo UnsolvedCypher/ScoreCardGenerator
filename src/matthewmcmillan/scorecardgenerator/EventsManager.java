@@ -8,10 +8,11 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class EventsManager {
     private static final ArrayList<Event> events = new ArrayList<>();
-    private static ArrayList<String> cubingUSA_ids;
+    private static HashMap<String, String> cubecomps_ids;
     private static final String[][] possible_events = {
             {"2x2", "2x2 Speedsolve"},
             {"3x3", "3x3 Speedsolve"},
@@ -44,10 +45,12 @@ public class EventsManager {
          sheet. That is the only sheet we will be using */
             Workbook wb = WorkbookFactory.create(new File(Main.workbook_name));
             Sheet sheet = wb.getSheetAt(0);
-            EventsManager.identifyColumns(sheet);
+            identifyColumns(sheet);
+            initializeCubeCompsIDs(sheet);
         } catch (Exception e) {
                 System.out.println("Searching for " + Main.workbook_name);
-                System.out.println("Error: xls file not found. Please check your spelling and make sure you are running the terminal in the right directory.");
+                System.out.println("Error: xls file not found. Please check your spelling and make sure you are " +
+                                           "running the terminal in the right directory.");
                 System.exit(0);
         }
     }
@@ -96,8 +99,8 @@ public class EventsManager {
     }
 
     public static int getEventIndex(String event_name) {
-        for (int i = 0; i < EventsManager.events.size(); i++) {
-            if (event_name.equals(EventsManager.events.get(i).getName())) {
+        for (int i = 0; i < events.size(); i++) {
+            if (event_name.equals(events.get(i).getName())) {
                 return i;
             }
         }
@@ -111,33 +114,26 @@ public class EventsManager {
     }
 
     private static void addCardToEvent(Sheet sheet, Event event, int eventColumn) {
-        int currentRow = 3;
         try {
       /* add competitors that have a "1" in the column eventColumn to the event
          that eventColumn represents
        */
-            //TODO: also check other cell, and check for blanks
-            while (sheet.getRow(currentRow).getCell(1) != null) {
-                //TODO: maybe change to numeric value rather than string?
-                if (sheet.getRow(currentRow).getCell(eventColumn).toString().equals("1.0")) {
+            for (int current_row = 0; current_row < sheet.getPhysicalNumberOfRows(); current_row++) {
+                if (sheet.getRow(current_row).getCell(eventColumn).toString().equals("1.0")) {
           /* if the competitor is registered for event, add his/her name */
-                    String name = sheet.getRow(currentRow).getCell(1).toString();
-                    String id = sheet.getRow(currentRow).getCell(3) == null ? "" : '(' + sheet.getRow(currentRow)
+                    String name = sheet.getRow(current_row).getCell(1).toString();
+                    String id = sheet.getRow(current_row).getCell(3) == null ? "" : '(' + sheet.getRow(current_row)
                             .getCell(3).toString() + ')';
-                    events.get(getEventIndex(event.getName())).addCard(new ScoreCard(name, id,
-                                                                                                            "Round " +
-                                                                                                                    "1", event));
+                    events.get(getEventIndex(event.getName())).addCard(new ScoreCard(name, id, "Round " + "1", event));
                 }
-                currentRow++;
             }
         } catch (Exception e) {
-            //TODO: why is there an exception???
-            //System.out.println("exception in addCardToEvent()");
+            System.out.println("exception in addCardToEvent()");
         }
     }
 
     private static String getEventFromAbbreviation(String abbreviation) {
-        for (String[] name_abbr_pair : EventsManager.possible_events) {
+        for (String[] name_abbr_pair : possible_events) {
             if (name_abbr_pair[0].equals(abbreviation)) {
                 return name_abbr_pair[1];
             }
@@ -148,7 +144,7 @@ public class EventsManager {
     }
 
     public static ArrayList<Event> getEvents() {
-        return EventsManager.events;
+        return events;
     }
 
     private static void identifyColumns(Sheet sheet) {
@@ -156,19 +152,32 @@ public class EventsManager {
     /* keep looking while cell isn't null or blank */
         while (sheet.getRow(2).getCell(column) != null &&
                 sheet.getRow(2).getCell(column).getCellType() != Cell.CELL_TYPE_BLANK) {
-            EventsManager.addCardToEvent(sheet, events.get(getEventIndex(getEventFromAbbreviation(sheet.getRow(2)
+            addCardToEvent(sheet, events.get(getEventIndex(getEventFromAbbreviation(sheet.getRow(2)
                                                                                                           .getCell(column)
                                                                                       .toString()))), column);
             column++;
         }
     }
-    private static void initializeCubingUSAIDs(Sheet sheet) {
-        
+    private static void initializeCubeCompsIDs(Sheet sheet) {
+        cubecomps_ids = new HashMap<>();
+        for (int i = 3; i < sheet.getPhysicalNumberOfRows(); i++) {
+            String cubecomps_id = Integer.toString(i - 2);
+            String competitor_name = sheet.getRow(i).getCell(1).getStringCellValue();
+            /* make sure we get a three digit number */
+            while (cubecomps_id.length() < 3) {
+                cubecomps_id = "0" + cubecomps_id;
+            }
+            cubecomps_ids.put(competitor_name, cubecomps_id);
+        }
+        cubecomps_ids.put("", "");
+    }
+    public static String getCubeCompsFromName(String competitor_name) {
+        return cubecomps_ids.get(competitor_name);
     }
     private static void setHeats() {
         try {
             FileWriter writer = new FileWriter("heats.txt");
-            for (Event event : EventsManager.events) {
+            for (Event event : events) {
                 if (event.getScoreCards().size() > 0) {
                     writer.write('\n' + event.getName() + ":\nHeat 1:\n");
                 }
