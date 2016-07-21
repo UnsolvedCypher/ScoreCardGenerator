@@ -8,10 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * Created by mmcmillan on 6/13/16.
- */
-public class OutputMethods {
+public final class OutputMethods {
+    private OutputMethods() {
+    }
+
     private static void execute(String command) {
         try {
             Runtime rt = Runtime.getRuntime();
@@ -48,7 +48,7 @@ public class OutputMethods {
         Zip.zipToOdf("skeleton");
     }
     public static void skeletonToPDF() {
-        OutputMethods.execute("unoconv skeleton.odt");
+        execute("unoconv skeleton.odt");
     }
     public static void moveToOutput(int pdf_number) {
         try {
@@ -89,6 +89,7 @@ public class OutputMethods {
             Files.deleteIfExists(Paths.get("heats.txt"));
             Files.deleteIfExists(Paths.get("scorecards.pdf"));
             Files.deleteIfExists(Paths.get("skeleton.odt"));
+            Files.deleteIfExists(Paths.get("skeleton.pdf"));
         } catch (Exception e) {
             System.out.println("Error in resetAll: " + e);
         }

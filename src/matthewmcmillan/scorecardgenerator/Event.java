@@ -1,26 +1,37 @@
 package matthewmcmillan.scorecardgenerator;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Event {
-    public Event(String[] abbreviation_and_name) {
-        abbreviation = abbreviation_and_name[0];
-        name = abbreviation_and_name[1];
-    }
-    public Event() {
-
+    public Event(String abbreviation) {
+        this.abbreviation = abbreviation;
+        Row event_row = ConfigReader.getEventRow(abbreviation);
+        readNumberOfAttempts(event_row);
+        readAdditionalRounds(event_row);
+        readSoftCutoff(event_row);
+        readHardCutoff(event_row);
+        name = EventsManager.getEventName(abbreviation);
     }
     private static final int ATTEMPTS_CELL = 1, SOFT_CUTOFF_CELL = 2, HARD_CUTOFF_CELL = 3, ROUND_2_CARDS_CELL = 4,
             ROUND_3_CARDS_CELL = 5, ROUND_4_CARDS_CELL = 6, HEAT_SIZE_CELL = 7;
     private String abbreviation = "";
     private int[] additional_rounds = {0, 0, 0};
-    private String attempt_type = "average";
+    private boolean mean = false;
     private String hard_cutoff = "";
-    private String name = "";
     private final ArrayList<ScoreCard> scorecards = new ArrayList<>();
     private String soft_cutoff = "";
+    private String name = "";
+
+    public String getName() {
+        return name;
+    }
+
 
     /**
      * Add a scorecard to this event
@@ -46,10 +57,10 @@ public class Event {
         ArrayList<ScoreCard> additonalScoreCards = new ArrayList<>();
         for (int i = 0; i < additional_rounds.length; i++) {
             for (int j = 0; j < additional_rounds[i]; j++) {
-                if (i == 2 || i < 2 && this.additional_rounds[i + 1] == 0) {
-                    additonalScoreCards.add(new ScoreCard(this, "Final Round"));
+                if (i == 2 || i < 2 && additional_rounds[i + 1] == 0) {
+                    additonalScoreCards.add(new ScoreCard(name, "Final Round", mean));
                 } else {
-                    additonalScoreCards.add(new ScoreCard(this, "Round " + (i + 2)));
+                    additonalScoreCards.add(new ScoreCard(name, "Round " + (i + 2), mean));
                 }
             }
         }
@@ -60,8 +71,8 @@ public class Event {
      * The number of attempt_type allowed in the event
      * @return an int with the number of attempt_type for this event
      */
-    public String getAttemptType() {
-        return attempt_type;
+    public boolean isMean() {
+        return mean;
     }
 
     /**
@@ -72,14 +83,6 @@ public class Event {
         return hard_cutoff;
     }
 
-
-    /**
-     * Returns the full event name
-     * @return the full event name
-     */
-    public String getName() {
-        return name;
-    }
 
     /**
      * Returns the first round scorecards for this event
@@ -97,15 +100,6 @@ public class Event {
         return soft_cutoff;
     }
 
-    /**
-     * Set the number of additional rounds and number of cards for each additional round
-     * @param additional_rounds an int where each element of the int represents an additional round (so the first
-     *                          element is round 2) and the value of each element is the number of cards for that
-     *                          round. There must be no more than 3 additional rounds (for four total)
-     */
-    public void setAdditional_rounds(int[] additional_rounds) {
-        this.additional_rounds = additional_rounds;
-    }
 
     public void readAdditionalRounds(Row event_row) {
         int[] additional_rounds = new int[3];
@@ -119,11 +113,14 @@ public class Event {
      * Set the numerical soft cutoff
      */
     public void readSoftCutoff(Row event_row) {
-        if (attempt_type == null) {
-            System.out.println("Error! Cannot set soft cutoffs until we know number of attempt_type!");
+        String spreadsheet_soft_cutoff;
+        if (event_row.getCell(SOFT_CUTOFF_CELL).getCellType() == Cell.CELL_TYPE_STRING) {
+            spreadsheet_soft_cutoff = event_row.getCell(SOFT_CUTOFF_CELL).getStringCellValue();
+        } else {
+            spreadsheet_soft_cutoff = convertCellToString(event_row.getCell(SOFT_CUTOFF_CELL));
         }
-        String spreadsheet_soft_cutoff = event_row.getCell(SOFT_CUTOFF_CELL).getStringCellValue();
         if (!spreadsheet_soft_cutoff.equals("none")) {
+            String attempt_type = mean? "mean" : "average";
             soft_cutoff = "--------must get under " + spreadsheet_soft_cutoff + " to finish " + attempt_type
                     + "--------";
         } else {
@@ -131,7 +128,12 @@ public class Event {
         }
     }
     public void readHardCutoff(Row event_row) {
-        String spreadsheet_hard_cutoff = event_row.getCell(HARD_CUTOFF_CELL).getStringCellValue();
+        String spreadsheet_hard_cutoff;
+        if (event_row.getCell(HARD_CUTOFF_CELL).getCellType() == Cell.CELL_TYPE_STRING) {
+            spreadsheet_hard_cutoff = event_row.getCell(HARD_CUTOFF_CELL).getStringCellValue();
+        } else {
+            spreadsheet_hard_cutoff = convertCellToString(event_row.getCell(HARD_CUTOFF_CELL));
+        }
         if (!spreadsheet_hard_cutoff.equals("none")) {
             hard_cutoff = "Attempts over " + spreadsheet_hard_cutoff + " must be stopped and given a DNF";
         } else {
@@ -140,7 +142,12 @@ public class Event {
     }
 
     public void readNumberOfAttempts(Row event_row) {
-        attempt_type = event_row.getCell(ATTEMPTS_CELL).getStringCellValue();
+        mean = (event_row.getCell(ATTEMPTS_CELL).getNumericCellValue() == 3);
+    }
+    private String convertCellToString(Cell cell) {
+        Date date = cell.getDateCellValue();
+        DateFormat df = new SimpleDateFormat("HH:mm");
+        return df.format(date);
     }
 
 }

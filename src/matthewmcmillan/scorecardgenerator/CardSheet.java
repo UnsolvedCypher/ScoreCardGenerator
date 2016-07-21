@@ -22,29 +22,34 @@ public class CardSheet {
                 new_lines.insertNumbered(
                         new String[][]{
                                 {"name", cards[i].getName()},
-                                {"wcaid", cards[i].getWCAID()},
-                                {"event", cards[i].getEvent().getName()},
+                                {"wcaid", cards[i].getWcaid()},
+                                {"event", cards[i].getEvent()},
                                 {"round", cards[i].getRound()},
                                 {"heat", cards[i].getHeat()},
-                                {"hard_cutoff", cards[i].getEvent().getHardCutoff()},
-                                {"ccid", EventsManager.getCubeCompsFromName(cards[i].getName())}
+                                {"hard_cutoff", cards[i].getHardCutoff()},
+                                {"ccid", cards[i].getCubecompsId()}
                         }, i
                         );
-                new_lines.insert("comp_name", Main.competition_name);
-                if (cards[i].getEvent().getAttemptType().equals("mean")) {
+                if (cards[i].getCubecompsId().equals("")) {
+                    new_lines.insertNumbered("ccid_label", "", i);
+                } else {
+                    new_lines.insertNumbered("ccid_label", "CubeComps ID:", i);
+                }
+                new_lines.insert("comp_name", ConfigReader.getCompetitionName());
+                if (cards[i].isMean()) {
                     new_lines.insertNumbered(
                         new String[][] {
                                 {"solve4", ""},
                                 {"solve5", ""},
                                 {"average_soft_cutoff", ""},
-                                {"mean_soft_cutoff", cards[i].getEvent().getSoftCutoff()}
+                                {"mean_soft_cutoff", cards[i].getSoftCutoff()}
                         }, i);
-                } else if (cards[i].getEvent().getAttemptType().equals("average")) {
+                } else {
                     new_lines.insertNumbered(
                             new String[][] {
                                     {"solve4", "Solve 4"},
                                     {"solve5", "Solve 5"},
-                                    {"average_soft_cutoff", cards[i].getEvent().getSoftCutoff()},
+                                    {"average_soft_cutoff", cards[i].getSoftCutoff()},
                                     {"mean_soft_cutoff", ""}
                             }, i
                     );
